@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>🏆 BIG CHAOS — MULTIPLAYER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;700;800;900&family=Permanent+Marker&family=Oswald:wght@400;700&display=swap');
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;touch-action:manipulation}
+body{font-family:'Nunito',sans-serif;color:#fff;background:#000;user-select:none}
+
+/* ══ SCREENS ══ */
+.screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+.screen.active{display:flex}
+
+/* ══ LOBBY ══ */
+#s-lobby{
+  background:radial-gradient(ellipse at 50% 30%,#1a0030 0%,#0a0514 50%,#000 100%);
+}
+.scanlines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);animation:scanMove 10s linear infinite}
+@keyframes scanMove{to{transform:translateY(4px)}}
+
+.lobby-wrap{position:relative;z-index:5;width:100%;max-width:420px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:16px}
+
+.logo{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,13vw,90px);line-height:.9;letter-spacing:4px;text-align:center;background:linear-gradient(180deg,#fff 0%,#ffd700 40%,#ff8800 70%,#ff3355 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 30px rgba(255,150,0,.5));animation:logoPulse 3s ease-in-out infinite}
+@keyframes logoPulse{0%,100%{filter:drop-shadow(0 0 20px rgba(255,150,0,.4))}50%{filter:drop-shadow(0 0 50px rgba(255,150,0,.8))}}
+.logo-sub{font-family:'Permanent Marker',cursive;font-size:clamp(13px,3vw,18px);color:rgba(255,200,100,.8);text-align:center}
+.logo-badge{display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(255,50,50,.15);border:1px solid rgba(255,50,50,.3);color:#ff5555;font-size:11px;letter-spacing:3px;font-weight:800}
+
+/* Cards */
+.lobby-card{
+  width:100%;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);border-radius:20px;
+  padding:20px;backdrop-filter:blur(10px);
+}
+.lc-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(16px,4vw,22px);letter-spacing:3px;color:rgba(255,255,255,.5);margin-bottom:14px;text-align:center}
+
+/* Name input */
+.name-wrap{position:relative;margin-bottom:10px}
+.name-input{
+  width:100%;padding:14px 18px;border-radius:12px;
+  border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);
+  color:#fff;font-family:'Nunito',sans-serif;font-size:16px;font-weight:800;
+  outline:none;letter-spacing:1px;transition:border-color .2s;
+}
+.name-input:focus{border-color:rgba(255,180,0,.5);background:rgba(255,180,0,.04)}
+.name-input::placeholder{color:rgba(255,255,255,.25)}
+
+/* Char picker */
+.char-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.cp-btn{
+  padding:10px 6px;border-radius:12px;border:2px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.04);cursor:pointer;text-align:center;
+  transition:all .2s;-webkit-tap-highlight-color:transparent;
+}
+.cp-btn:hover{background:rgba(255,255,255,.1)}
+.cp-btn.selected{border-width:2px}
+.cp-emoji{font-size:clamp(22px,5vw,30px);display:block;margin-bottom:3px}
+.cp-name{font-size:9px;font-weight:800;letter-spacing:1px;opacity:.7}
+
+/* Room code */
+.code-display{
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,12vw,72px);
+  letter-spacing:12px;text-align:center;color:#ffd700;
+  text-shadow:0 0 30px rgba(255,180,0,.6);padding:10px 0;
+}
+.code-input{
+  width:100%;padding:16px;border-radius:12px;text-align:center;
+  border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);
+  color:#fff;font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,7vw,42px);
+  letter-spacing:10px;outline:none;transition:border-color .2s;
+}
+.code-input:focus{border-color:rgba(255,180,0,.5)}
+.code-hint{font-size:11px;color:rgba(255,255,255,.35);text-align:center;letter-spacing:1px;margin-top:6px}
+
+/* Buttons */
+.btn{
+  width:100%;padding:15px;border-radius:12px;border:none;cursor:pointer;
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(16px,4vw,21px);letter-spacing:3px;
+  transition:all .15s;-webkit-tap-highlight-color:transparent;
+}
+.btn.gold{background:linear-gradient(135deg,#ffd700,#ff8800);color:#000;box-shadow:0 4px 0 rgba(100,50,0,.5)}
+.btn.red{background:linear-gradient(135deg,#ff3355,#cc1133);color:#fff;box-shadow:0 4px 0 rgba(100,0,30,.5)}
+.btn.ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6)}
+.btn:active{transform:translateY(2px);box-shadow:none}
+.btn:disabled{opacity:.35;pointer-events:none}
+
+/* Waiting */
+.waiting-dots{display:flex;gap:8px;justify-content:center;margin:10px 0}
+.wd{width:10px;height:10px;border-radius:50%;background:#ffd700;animation:wdBounce 1s ease-in-out infinite}
+.wd:nth-child(2){animation-delay:.2s}
+.wd:nth-child(3){animation-delay:.4s}
+@keyframes wdBounce{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-10px);opacity:1}}
+
+/* Players list in lobby */
+.players-list{display:flex;flex-direction:column;gap:8px}
+.player-slot{
+  display:flex;align-items:center;gap:12px;padding:12px 16px;
+  border-radius:12px;border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+}
+.player-slot.filled{border-color:rgba(51,221,119,.25);background:rgba(51,221,119,.05)}
+.player-slot.empty{opacity:.4;border-style:dashed}
+.ps-avatar{font-size:28px;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06)}
+.ps-info{flex:1}
+.ps-name{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px}
+.ps-role{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:1px}
+.ps-badge{font-size:9px;padding:3px 8px;border-radius:10px;font-weight:800;letter-spacing:1px}
+.ps-badge.host{background:rgba(255,180,0,.15);color:#ffd700;border:1px solid rgba(255,180,0,.3)}
+.ps-badge.guest{background:rgba(51,153,255,.15);color:#3399ff;border:1px solid rgba(51,153,255,.3)}
+.ps-badge.ready{background:rgba(51,221,119,.15);color:#33dd77;border:1px solid rgba(51,221,119,.3)}
+
+/* ══ GAME SCREEN ══ */
+#s-game{background:#000}
+.game-wrap{width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden}
+
+/* TOP HUD */
+.hud{
+  background:rgba(0,0,0,.85);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,.07);
+  padding:8px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;
+}
+.hud-logo{font-family:'Bebas Neue',sans-serif;font-size:clamp(16px,4vw,22px);letter-spacing:3px;color:#ffd700}
+.hud-week{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;color:rgba(255,255,255,.35)}
+.hud-phase{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:2px}
+.hud-spacer{flex:1}
+.hud-players{display:flex;gap:6px;align-items:center}
+.hud-avatar{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:14px;background:rgba(255,255,255,.05)}
+.hud-avatar.active{border-color:#ffd700;box-shadow:0 0 8px rgba(255,180,0,.4)}
+
+/* OPPONENT BAR */
+.opponent-bar{
+  background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06);
+  padding:8px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.opp-label{font-size:9px;letter-spacing:3px;color:rgba(255,255,255,.3);white-space:nowrap}
+.opp-info{display:flex;align-items:center;gap:8px;flex:1}
+.opp-emoji{font-size:22px}
+.opp-name{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px}
+.opp-pop{font-size:11px;color:rgba(255,255,255,.4)}
+.opp-status{font-size:10px;padding:3px 8px;border-radius:10px;font-weight:800;letter-spacing:1px}
+.opp-action{font-size:10px;color:rgba(255,255,255,.4);font-style:italic;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:12px 14px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent}
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+
+/* SCENE CARDS */
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:16px;margin-bottom:12px;animation:cardIn .3s ease}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.card-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,5vw,26px);letter-spacing:2px;margin-bottom:4px}
+.card-sub{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:1px;margin-bottom:12px}
+
+/* Dialogue */
+.dlg{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:13px;margin-bottom:10px}
+.dlg-speaker{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;margin-bottom:6px}
+.dlg-text{font-family:'Permanent Marker',cursive;font-size:clamp(12px,2.8vw,15px);line-height:1.7;color:rgba(255,255,255,.82)}
+
+/* Action buttons */
+.actions{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.actions.row{flex-direction:row}
+.act{
+  padding:13px 16px;border-radius:10px;border:none;cursor:pointer;
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(13px,3.5vw,17px);letter-spacing:2px;
+  transition:all .15s;text-align:center;-webkit-tap-highlight-color:transparent;
+}
+.act.gold{background:linear-gradient(135deg,#ffd700,#ff8800);color:#000;box-shadow:0 3px 0 rgba(100,50,0,.4)}
+.act.red{background:linear-gradient(135deg,#ff3355,#cc1133);color:#fff;box-shadow:0 3px 0 rgba(100,0,30,.4)}
+.act.blue{background:linear-gradient(135deg,#3399ff,#1155cc);color:#fff;box-shadow:0 3px 0 rgba(0,30,100,.4)}
+.act.green{background:linear-gradient(135deg,#33dd77,#009944);color:#000;box-shadow:0 3px 0 rgba(0,60,30,.4)}
+.act.ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.65)}
+.act:active{transform:translateY(2px);box-shadow:none}
+.act:disabled{opacity:.3;pointer-events:none}
+
+/* Vote cards */
+.vote-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.vote-card{
+  border-radius:12px;padding:12px 10px;text-align:center;cursor:pointer;
+  background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.07);
+  transition:all .2s;-webkit-tap-highlight-color:transparent;
+}
+.vote-card:hover{border-color:rgba(255,50,50,.5);background:rgba(255,50,50,.07);transform:scale(1.03)}
+.vote-card.voted{border-color:#ff3355;background:rgba(255,50,50,.12)}
+.vote-card.immune{opacity:.3;cursor:not-allowed}
+.vote-card.immune:hover{transform:none;background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.07)}
+.vc-emoji{font-size:clamp(26px,6vw,36px);display:block;margin-bottom:6px}
+.vc-name{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px}
+.vc-pop{font-size:10px;color:rgba(255,255,255,.4);margin-top:3px}
+
+/* Ranking */
+.rank-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.rank-row{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+.rank-row.me{background:rgba(255,180,0,.06);border-color:rgba(255,180,0,.2)}
+.rank-row.opp{background:rgba(51,153,255,.05);border-color:rgba(51,153,255,.15)}
+.rr-pos{font-family:'Bebas Neue',sans-serif;font-size:20px;color:rgba(255,255,255,.2);width:24px}
+.rr-emoji{font-size:22px}
+.rr-info{flex:1}
+.rr-name{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px}
+.rr-sub{font-size:9px;color:rgba(255,255,255,.35);letter-spacing:1px}
+.rr-pop{font-family:'Bebas Neue',sans-serif;font-size:18px}
+.rr-bar{width:60px;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-top:3px}
+.rr-bar-fill{height:100%;border-radius:2px}
+
+/* Challenge */
+.challenge-box{
+  background:rgba(0,0,0,.4);border:1px solid rgba(255,180,0,.2);border-radius:14px;padding:16px;margin-bottom:10px;
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(255,180,0,.04),transparent 60%);
+}
+.ch-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,5vw,26px);letter-spacing:3px;text-align:center;color:#ffd700;margin-bottom:4px;text-shadow:0 0 15px rgba(255,180,0,.4)}
+.ch-desc{font-size:11px;color:rgba(255,255,255,.4);text-align:center;margin-bottom:14px;letter-spacing:1px}
+
+/* Timing game */
+.timing-wrap{width:100%;height:44px;position:relative;border-radius:8px;overflow:hidden;background:rgba(255,255,255,.06);cursor:pointer;margin-bottom:12px;-webkit-tap-highlight-color:transparent}
+.t-zone{position:absolute;top:0;bottom:0;background:rgba(51,221,119,.25);border:1px solid rgba(51,221,119,.5)}
+.t-zone.gold{background:rgba(255,215,0,.35);border-color:#ffd700}
+.t-cursor{position:absolute;top:0;bottom:0;width:5px;background:#fff;border-radius:2px;box-shadow:0 0 10px rgba(255,255,255,.8)}
+.t-msg{font-family:'Bebas Neue',sans-serif;font-size:clamp(16px,4vw,22px);letter-spacing:3px;text-align:center;min-height:28px;margin-bottom:8px}
+
+/* Wheel */
+.wheel-container{display:flex;flex-direction:column;align-items:center;margin-bottom:12px}
+.wheel-svg-wrap{position:relative;display:inline-block}
+.wheel-ptr{font-size:24px;position:absolute;top:-16px;left:50%;transform:translateX(-50%);filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+.wheel-result{font-family:'Bebas Neue',sans-serif;font-size:clamp(16px,4vw,24px);text-align:center;margin-top:10px;min-height:28px;letter-spacing:2px}
+.wheel-spin-btn{margin-top:12px;padding:12px 36px;border:none;border-radius:30px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;background:linear-gradient(135deg,#ffd700,#ff8800);color:#000;box-shadow:0 4px 0 rgba(100,50,0,.4);transition:all .15s;-webkit-tap-highlight-color:transparent}
+.wheel-spin-btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(100,50,0,.4)}
+
+/* Turn indicator */
+.turn-banner{
+  width:100%;padding:8px 14px;text-align:center;
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(13px,3.5vw,17px);letter-spacing:3px;
+  background:rgba(255,180,0,.08);border-bottom:1px solid rgba(255,180,0,.15);
+  color:#ffd700;flex-shrink:0;
+}
+.turn-banner.myturn{background:rgba(51,221,119,.08);border-color:rgba(51,221,119,.2);color:#33dd77}
+.turn-banner.waiting{background:rgba(51,153,255,.06);border-color:rgba(51,153,255,.15);color:rgba(51,153,255,.8)}
+
+/* BOTTOM BAR */
+.bottombar{background:rgba(0,0,0,.85);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.07);padding:8px 12px;display:flex;gap:6px;flex-shrink:0}
+.bbb{flex:1;padding:9px 4px;border-radius:10px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.04);font-size:clamp(7px,2vw,10px);letter-spacing:1px;font-weight:800;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:2px;color:rgba(255,255,255,.45);-webkit-tap-highlight-color:transparent}
+.bbb .bi{font-size:clamp(15px,3.5vw,20px)}
+.bbb.active,.bbb:hover{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.15)}
+.bbb.hl{border-color:rgba(255,180,0,.3);background:rgba(255,180,0,.07);color:#ffd700}
+
+/* ══ FINAL ══ */
+#s-final{background:radial-gradient(ellipse at 50% 30%,#1a1000,#000)}
+.final-wrap{max-width:400px;width:100%;padding:24px;text-align:center;overflow-y:auto}
+.final-trophy{font-size:clamp(64px,15vw,100px);display:block;animation:tb 1s ease infinite}
+@keyframes tb{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+.final-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(34px,9vw,64px);letter-spacing:4px;background:linear-gradient(135deg,#fff,#ffd700,#ff8800);-webkit-background-clip:text;background-clip:text;color:transparent;margin:10px 0}
+.final-stats{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:16px 0}
+.fs{padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);text-align:center;min-width:80px}
+.fs-v{font-family:'Bebas Neue',sans-serif;font-size:clamp(24px,6vw,34px);color:#ffd700}
+.fs-l{font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.4)}
+.final-msg{font-family:'Permanent Marker',cursive;font-size:clamp(13px,3vw,17px);color:rgba(255,255,255,.75);line-height:1.7;margin-bottom:20px}
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cp{position:absolute;width:8px;height:8px;border-radius:2px;animation:cf linear infinite}
+@keyframes cf{0%{transform:translateY(-10px) rotate(0);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* ══ OVERLAY / TOAST ══ */
+.overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.92);backdrop-filter:blur(16px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.ov-icon{font-size:clamp(50px,12vw,80px);margin-bottom:10px;animation:tb 1s ease infinite}
+.ov-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(26px,7vw,50px);letter-spacing:3px;text-align:center;margin-bottom:10px;line-height:1.1}
+.ov-body{font-family:'Permanent Marker',cursive;font-size:clamp(13px,3vw,16px);color:rgba(255,255,255,.75);text-align:center;max-width:360px;line-height:1.7;margin-bottom:20px}
+.ov-body strong{color:#ffd700}
+
+#toast-wrap{position:fixed;top:72px;right:10px;z-index:300;display:flex;flex-direction:column;gap:5px;pointer-events:none}
+.toast{background:rgba(10,10,20,.95);border:1px solid rgba(255,255,255,.1);border-left:3px solid #ffd700;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;max-width:260px;animation:toastIn .3s ease;backdrop-filter:blur(10px)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.toast.out{animation:toastOut .3s ease forwards}
+@keyframes toastOut{to{opacity:0;transform:translateX(20px)}}
+
+/* Connection indicator */
+.conn-dot{width:7px;height:7px;border-radius:50%;background:#ff3355;display:inline-block;margin-right:4px;animation:connPulse 1.5s ease-in-out infinite}
+.conn-dot.online{background:#33dd77;animation:none}
+@keyframes connPulse{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</head>
+<body>
+
+<!-- ══ LOBBY ══ -->
+<div class="screen active" id="s-lobby">
+  <div class="scanlines"></div>
+  <div class="lobby-wrap" id="lobby-wrap">
+    <div>
+      <div class="logo">BIG<br>CHAOS</div>
+      <div class="logo-sub">O Reality Multiplayer 🔥</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.4)">
+      <span class="conn-dot" id="conn-dot"></span>
+      <span id="conn-label">Conectando ao Firebase...</span>
+    </div>
+    <div id="lobby-content" style="width:100%"><!-- injected --></div>
+  </div>
+</div>
+
+<!-- ══ GAME ══ -->
+<div class="screen" id="s-game">
+  <div class="game-wrap">
+    <div class="hud">
+      <div class="hud-logo">BIG CHAOS</div>
+      <div class="hud-week" id="hud-week">SEMANA 1</div>
+      <div class="hud-phase" id="hud-phase">-</div>
+      <div class="hud-spacer"></div>
+      <div class="hud-players" id="hud-players"></div>
+    </div>
+    <div class="opponent-bar" id="opp-bar"></div>
+    <div class="turn-banner" id="turn-banner">-</div>
+    <div class="content" id="content"></div>
+    <div class="bottombar">
+      <button class="bbb hl" onclick="switchTab('game')" id="tab-game"><div class="bi">📺</div>AO VIVO</button>
+      <button class="bbb" onclick="switchTab('ranking')" id="tab-ranking"><div class="bi">📊</div>RANK</button>
+      <button class="bbb" onclick="switchTab('chat')" id="tab-chat"><div class="bi">💬</div>CHAT</button>
+      <button class="bbb" onclick="switchTab('confess')" id="tab-confess"><div class="bi">🎥</div>CONF.</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FINAL ══ -->
+<div class="screen" id="s-final">
+  <div class="confetti" id="confetti"></div>
+  <div class="final-wrap" id="final-wrap"></div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div id="toast-wrap"></div>
+
+<!-- ══ FIREBASE SDK ══ -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+// ══════════════════════════════
+//  FIREBASE INIT
+// ══════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyB4xdTQ6MnLPIr3Iif3HLBjCanNbLOn1x8",
+  authDomain: "bbb26-3c559.firebaseapp.com",
+  projectId: "bbb26-3c559",
+  storageBucket: "bbb26-3c559.firebasestorage.app",
+  messagingSenderId: "354153727080",
+  appId: "1:354153727080:web:b1706d117df418ed7aa7dd",
+  databaseURL: "https://bbb26-3c559-default-rtdb.firebaseio.com"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// Connection check
+db.ref('.info/connected').on('value', snap => {
+  const online = snap.val();
+  document.getElementById('conn-dot').className = 'conn-dot' + (online ? ' online' : '');
+  document.getElementById('conn-label').textContent = online ? 'Firebase conectado ✓' : 'Reconectando...';
+});
+
+// ══════════════════════════════
+//  CHARACTERS
+// ══════════════════════════════
+const CHARS = {
+  Pollyana:{emoji:'🌻',color:'#f5c518',role:'A Organizadora',pop:80,force:60,luck:70,charm:90,
+    lines:{win:'EU SABIA que ia ganhar! 🌻',lose:'Aprendi muito... (chora)',vote:'Game is game!',conf:['Tô fingindo que tô bem mas tô ÓTIMA.','Meu plano tá funcionando... espero.']}},
+  Carluz:{emoji:'⚡',color:'#ff5533',role:'O Competitivo',pop:65,force:95,luck:55,charm:60,
+    lines:{win:'GANHEEEI!! Era meu desde o começo!',lose:'Impossível. Foi trapaça.',vote:'Sem sentimento. Estratégia pura.',conf:['Esse povo não sabe com quem tá lidando.','Vou ganhar. Simples assim.']}},
+  Eros:{emoji:'🔮',color:'#9944ff',role:'O Místico',pop:75,force:55,luck:95,charm:80,
+    lines:{win:'O universo sempre soube.',lose:'Havia perturbações na minha aura...',vote:'Os astros indicam essa escolha.',conf:['Já li o futuro de todos aqui.','Minha sorte é imbatível.']}},
+  Stephany:{emoji:'📐',color:'#2288ff',role:'A Estrategista',pop:70,force:75,luck:60,charm:70,
+    lines:{win:'Resultado exatamente como calculado.',lose:'Houve uma variável imprevista.',vote:'Decisão baseada em dados.',conf:['Planilha atualizada.','Eles acham que sou amiga. Correto.']}},
+  Mary:{emoji:'🌿',color:'#33cc66',role:'A Herbalista',pop:85,force:50,luck:75,charm:85,
+    lines:{win:'Que bênção! 🌿',lose:'Que a melhor pessoa tenha ganhado.',vote:'Voto com coração pesado...',conf:['Meu chazinho de camomila salvou meu dia.','Não sou de confusão mas...']}},
+  Mel:{emoji:'🌸',color:'#ff44aa',role:'A Explosiva',pop:72,force:70,luck:85,charm:88,
+    lines:{win:'GANHEI GANHEI GANHEI!! 🌸',lose:'NÃO. NÃO NÃO NÃO.',vote:'Voto e talvez me arrependa.',conf:['Tô AQUI, tô PRESENTE!','Essa semana foi uma LOUCURA!']}},
+  Joy:{emoji:'🍷',color:'#ff8800',role:'A Rainha',pop:68,force:65,luck:65,charm:95,
+    lines:{win:'Como esperado. Alguém tem champagne?',lose:'Isso É uma conspiração.',vote:'Voto com elegância e sem remorso.',conf:['Ninguém aqui tem meu nível.','Já tomei 3 taças hoje. Game design.']}},
+  Ellie:{emoji:'🌊',color:'#00cccc',role:'A Silenciosa',pop:78,force:80,luck:70,charm:65,
+    lines:{win:'...(acena levemente)...',lose:'...(respira fundo)...',vote:'...',conf:['...','Estou observando. Tudo.']}},
+  Elisa:{emoji:'💜',color:'#cc4488',role:'A Selvagem',pop:74,force:85,luck:60,charm:76,
+    lines:{win:'EU VENCI?? COMO??',lose:'Que pena. Mas fiz amigos!',vote:'Vou votar em quem minha intuição mandar.',conf:['Tô absolutamente sem plano.','Minha estratégia é não ter estratégia.']}},
+};
+
+const NPC_NAMES = Object.keys(CHARS); // all 9 used as NPCs too
+
+// ══════════════════════════════
+//  LOCAL STATE
+// ══════════════════════════════
+let LOCAL = {
+  playerId: 'p_' + Math.random().toString(36).slice(2,8),
+  roomCode: null,
+  isHost: false,
+  myChar: null,
+  myName: '',
+  activeTab: 'game',
+};
+
+// ══════════════════════════════
+//  LOBBY UI
+// ══════════════════════════════
+function renderLobby() {
+  document.getElementById('lobby-content').innerHTML = `
+    <div class="lobby-card" style="margin-bottom:12px">
+      <div class="lc-title">SEU PERSONAGEM</div>
+      <input class="name-input" id="inp-name" maxlength="16" placeholder="Seu nome aqui..." value="${LOCAL.myName}">
+      <div class="char-picker" id="char-picker">
+        ${Object.entries(CHARS).map(([k,c]) => `
+          <div class="cp-btn ${LOCAL.myChar===k?'selected':''}" id="cp-${k}"
+            style="${LOCAL.myChar===k?`border-color:${c.color};background:${c.color}18`:''}"
+            onclick="pickChar('${k}')">
+            <span class="cp-emoji">${c.emoji}</span>
+            <div class="cp-name" style="color:${LOCAL.myChar===k?c.color:'rgba(255,255,255,.5)'}">${k}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="actions row" style="gap:8px;margin-bottom:12px">
+      <button class="btn gold" onclick="createRoom()">✨ CRIAR SALA</button>
+      <button class="btn ghost" onclick="showJoinUI()">🔗 ENTRAR</button>
+    </div>
+    <div id="room-section"></div>`;
+}
+
+function pickChar(name) {
+  LOCAL.myChar = name;
+  renderLobby();
+}
+
+function validateSetup() {
+  const name = document.getElementById('inp-name')?.value?.trim();
+  if (!name) { toast('Digite seu nome!', '#ff3355'); return false; }
+  if (!LOCAL.myChar) { toast('Escolha seu personagem!', '#ff3355'); return false; }
+  LOCAL.myName = name;
+  return true;
+}
+
+// ══════════════════════════════
+//  CREATE ROOM
+// ══════════════════════════════
+function createRoom() {
+  if (!validateSetup()) return;
+  const code = Math.random().toString(36).slice(2,6).toUpperCase();
+  LOCAL.roomCode = code;
+  LOCAL.isHost = true;
+
+  const roomRef = db.ref(`rooms/${code}`);
+  roomRef.set({
+    code,
+    hostId: LOCAL.playerId,
+    status: 'waiting',
+    week: 1,
+    phase: 'challenge',
+    created: Date.now(),
+    players: {
+      [LOCAL.playerId]: {
+        id: LOCAL.playerId,
+        name: LOCAL.myName,
+        char: LOCAL.myChar,
+        isHost: true,
+        pop: CHARS[LOCAL.myChar].pop,
+        wins: 0,
+        votes: 0,
+        online: true,
+        action: '',
+        score: 0,
+        ready: false,
+      }
+    },
+    npcs: buildNPCs(),
+    chatMessages: {},
+    gameData: {
+      leader: '',
+      nominated: [],
+      voteResults: {},
+      challengeScores: {},
+      phase: 'waiting',
+      turn: '',
+      weekHistory: [],
+    }
+  }).then(() => {
+    roomRef.onDisconnect().update({ status: 'abandoned' });
+    listenRoom(code);
+    showRoomWaiting(code);
+  }).catch(e => toast('Erro ao criar sala: ' + e.message, '#ff3355'));
+}
+
+function buildNPCs() {
+  const npcs = {};
+  const used = [];
+  NPC_NAMES.slice(0, 7).forEach((name, i) => {
+    const id = 'npc_' + i;
+    npcs[id] = {
+      id, name, char: name, isNPC: true,
+      pop: CHARS[name].pop + Math.floor(Math.random()*10-5),
+      wins: 0, votes: 0, score: 0,
+      personality: ['agressivo','estrategico','pacifico','mistico','dramatico','silencioso','imprevisivel'][i],
+    };
+  });
+  return npcs;
+}
+
+function showRoomWaiting(code) {
+  document.getElementById('room-section').innerHTML = `
+    <div class="lobby-card">
+      <div class="lc-title">SALA CRIADA!</div>
+      <div class="code-hint">Compartilhe o código com seu amigo:</div>
+      <div class="code-display">${code}</div>
+      <button onclick="navigator.clipboard&&navigator.clipboard.writeText('${code}').then(()=>toast('Código copiado! 📋','#33dd77'))" class="btn ghost" style="margin-bottom:12px">📋 COPIAR CÓDIGO</button>
+      <div class="lc-title" style="margin-top:4px">JOGADORES</div>
+      <div class="players-list" id="players-list">
+        <div class="player-slot filled">
+          <div class="ps-avatar">${CHARS[LOCAL.myChar].emoji}</div>
+          <div class="ps-info">
+            <div class="ps-name">${LOCAL.myName}</div>
+            <div class="ps-role">${CHARS[LOCAL.myChar].role}</div>
+          </div>
+          <span class="ps-badge host">HOST</span>
+        </div>
+        <div class="player-slot empty" id="slot-guest">
+          <div class="ps-avatar" style="opacity:.4">👤</div>
+          <div class="ps-info"><div class="ps-name" style="opacity:.4">Aguardando...</div></div>
+        </div>
+      </div>
+      <div class="waiting-dots" style="margin-top:14px"><div class="wd"></div><div class="wd"></div><div class="wd"></div></div>
+      <div style="font-size:11px;color:rgba(255,255,255,.3);text-align:center;letter-spacing:1px">Aguardando segundo jogador...</div>
+    </div>`;
+}
+
+// ══════════════════════════════
+//  JOIN ROOM
+// ══════════════════════════════
+function showJoinUI() {
+  document.getElementById('room-section').innerHTML = `
+    <div class="lobby-card">
+      <div class="lc-title">ENTRAR EM SALA</div>
+      <input class="code-input" id="inp-code" maxlength="4" placeholder="XXXX" oninput="this.value=this.value.toUpperCase()">
+      <div class="code-hint">Digite o código de 4 letras</div>
+      <button class="btn gold" style="margin-top:10px" onclick="joinRoom()">🚪 ENTRAR!</button>
+    </div>`;
+}
+
+function joinRoom() {
+  if (!validateSetup()) return;
+  const code = document.getElementById('inp-code')?.value?.trim().toUpperCase();
+  if (code.length !== 4) { toast('Código deve ter 4 letras!', '#ff3355'); return; }
+
+  db.ref(`rooms/${code}`).once('value').then(snap => {
+    const room = snap.val();
+    if (!room) { toast('Sala não encontrada!', '#ff3355'); return; }
+    if (room.status === 'playing') { toast('Jogo já em andamento!', '#ff8800'); return; }
+    if (room.status === 'abandoned') { toast('Sala abandonada!', '#ff3355'); return; }
+
+    LOCAL.roomCode = code;
+    LOCAL.isHost = false;
+
+    return db.ref(`rooms/${code}/players/${LOCAL.playerId}`).set({
+      id: LOCAL.playerId,
+      name: LOCAL.myName,
+      char: LOCAL.myChar,
+      isHost: false,
+      pop: CHARS[LOCAL.myChar].pop,
+      wins: 0, votes: 0, online: true,
+      action: '', score: 0, ready: false,
+    });
+  }).then(() => {
+    if (!LOCAL.roomCode) return;
+    listenRoom(LOCAL.roomCode);
+    toast(`Entrou na sala ${LOCAL.roomCode}! 🎉`, '#33dd77');
+  }).catch(e => toast('Erro: ' + e.message, '#ff3355'));
+}
+
+// ══════════════════════════════
+//  LISTEN ROOM
+// ══════════════════════════════
+let roomRef = null;
+function listenRoom(code) {
+  if (roomRef) roomRef.off();
+  roomRef = db.ref(`rooms/${code}`);
+
+  roomRef.on('value', snap => {
+    const room = snap.val();
+    if (!room) return;
+
+    const players = Object.values(room.players || {});
+    const me = players.find(p => p.id === LOCAL.playerId);
+    const opp = players.find(p => p.id !== LOCAL.playerId);
+
+    // Update lobby player list if waiting
+    if (room.status === 'waiting') {
+      updateLobbyPlayers(players, room);
+
+      // Host starts game when 2 players are in
+      if (LOCAL.isHost && players.length === 2) {
+        setTimeout(() => startGame(room), 1000);
+      }
+      return;
+    }
+
+    if (room.status === 'playing') {
+      showScreen('s-game');
+      syncGameState(room, me, opp);
+    }
+
+    if (room.status === 'finished') {
+      showFinalScreen(room);
+    }
+  });
+}
+
+function updateLobbyPlayers(players, room) {
+  const list = document.getElementById('players-list');
+  if (!list) return;
+  const host = players.find(p => p.isHost);
+  const guest = players.find(p => !p.isHost);
+  list.innerHTML = `
+    <div class="player-slot filled">
+      <div class="ps-avatar">${host ? CHARS[host.char]?.emoji || '👤' : '👤'}</div>
+      <div class="ps-info">
+        <div class="ps-name" style="color:${host?CHARS[host.char]?.color||'#fff':'rgba(255,255,255,.4)'}">${host?.name || '...'}</div>
+        <div class="ps-role">${host ? CHARS[host.char]?.role || '' : ''}</div>
+      </div>
+      <span class="ps-badge host">HOST</span>
+    </div>
+    <div class="player-slot ${guest?'filled':'empty'}">
+      <div class="ps-avatar">${guest ? CHARS[guest.char]?.emoji || '👤' : '👤'}</div>
+      <div class="ps-info">
+        <div class="ps-name" style="color:${guest?CHARS[guest.char]?.color||'#fff':'rgba(255,255,255,.4)'}">${guest?.name || 'Aguardando...'}</div>
+        <div class="ps-role">${guest ? CHARS[guest.char]?.role || '' : ''}</div>
+      </div>
+      ${guest ? '<span class="ps-badge ready">PRONTO ✓</span>' : ''}
+    </div>`;
+
+  // Remove waiting dots if guest joined
+  if (guest) {
+    document.querySelector('.waiting-dots')?.remove();
+    toast(`${guest.name} entrou na sala! 🎮`, CHARS[guest.char]?.color || '#33dd77');
+  }
+}
+
+// ══════════════════════════════
+//  START GAME (host only)
+// ══════════════════════════════
+function startGame(room) {
+  if (!LOCAL.isHost) return;
+  const players = Object.values(room.players);
+
+  db.ref(`rooms/${LOCAL.roomCode}`).update({
+    status: 'playing',
+    'gameData/phase': 'challenge',
+    'gameData/week': 1,
+    'gameData/leader': '',
+    'gameData/nominated': [],
+    'gameData/voteResults': {},
+    'gameData/challengeScores': {},
+    'gameData/turn': players[0].id, // host goes first
+    'gameData/weekHistory': [],
+  });
+}
+
+// ══════════════════════════════
+//  SYNC GAME STATE
+// ══════════════════════════════
+let lastPhase = '';
+function syncGameState(room, me, opp) {
+  const gd = room.gameData || {};
+  const phase = gd.phase || 'challenge';
+  const week = gd.week || 1;
+  const isMyTurn = gd.turn === LOCAL.playerId;
+
+  // Update HUD
+  document.getElementById('hud-week').textContent = `SEMANA ${week}`;
+  const phaseNames = {challenge:'PROVA',nominate:'INDICAÇÃO',vote:'VOTAÇÃO',result:'RESULTADO',final:'FINAL'};
+  const phaseColors = {challenge:'rgba(255,180,0,.2)',nominate:'rgba(170,68,255,.2)',vote:'rgba(255,50,50,.2)',result:'rgba(51,221,119,.2)',final:'rgba(255,180,0,.3)'};
+  const phaseEl = document.getElementById('hud-phase');
+  phaseEl.textContent = phaseNames[phase] || phase.toUpperCase();
+  phaseEl.style.background = phaseColors[phase] || 'rgba(255,255,255,.08)';
+  phaseEl.style.color = '#fff';
+
+  // Player avatars in HUD
+  const players = Object.values(room.players || {});
+  document.getElementById('hud-players').innerHTML = players.map(p =>
+    `<div class="hud-avatar ${p.id === LOCAL.playerId ? 'active' : ''}" title="${p.name}">${CHARS[p.char]?.emoji || '👤'}</div>`
+  ).join('') + `<div style="font-size:10px;color:rgba(255,255,255,.3);margin-left:4px">${players.length}/2</div>`;
+
+  // Opponent bar
+  if (opp) {
+    const oppC = CHARS[opp.char] || {};
+    document.getElementById('opp-bar').innerHTML = `
+      <div class="opp-label">VS</div>
+      <div class="opp-info">
+        <div class="opp-emoji">${oppC.emoji || '👤'}</div>
+        <div>
+          <div class="opp-name" style="color:${oppC.color || '#fff'}">${opp.name}</div>
+          <div class="opp-pop">⭐${opp.pop || 0} pop · ${opp.wins || 0}🏆 vitórias</div>
+        </div>
+      </div>
+      <div class="opp-action">${opp.action || ''}</div>
+      <div class="opp-status" style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.5)">${opp.online ? '🟢 online' : '🔴 offline'}</div>`;
+  }
+
+  // Turn banner
+  const turnEl = document.getElementById('turn-banner');
+  if (isMyTurn) {
+    turnEl.textContent = '⚡ SUA VEZ — AÇÃO NECESSÁRIA!';
+    turnEl.className = 'turn-banner myturn';
+  } else {
+    turnEl.textContent = `⏳ Vez de ${opp?.name || 'adversário'}...`;
+    turnEl.className = 'turn-banner waiting';
+  }
+
+  // Render phase content if changed
+  if (phase !== lastPhase || LOCAL.activeTab !== 'game') {
+    lastPhase = phase;
+  }
+
+  if (LOCAL.activeTab === 'game') {
+    renderPhase(phase, room, me, opp, isMyTurn, gd, week);
+  } else if (LOCAL.activeTab === 'ranking') {
+    renderRanking(room, me, opp);
+  }
+}
+
+// ══════════════════════════════
+//  RENDER PHASE
+// ══════════════════════════════
+function renderPhase(phase, room, me, opp, isMyTurn, gd, week) {
+  const c = document.getElementById('content');
+  if (!c) return;
+
+  if (phase === 'challenge') renderChallenge(room, me, opp, isMyTurn, gd, week);
+  else if (phase === 'nominate') renderNominate(room, me, opp, isMyTurn, gd);
+  else if (phase === 'vote') renderVote(room, me, opp, isMyTurn, gd);
+  else if (phase === 'result') renderResult(room, me, opp, gd, week);
+  else if (phase === 'final') renderFinalPhase(room, me, opp, gd);
+}
+
+// ══════════════════════════════
+//  CHALLENGE PHASE
+// ══════════════════════════════
+let timingInterval = null;
+let timingPos = 0, timingDir = 1, timingAttempts = 3, timingScore = 0;
+let wheelSpun = false;
+
+function renderChallenge(room, me, opp, isMyTurn, gd, week) {
+  const c = document.getElementById('content');
+  const myScore = gd.challengeScores?.[LOCAL.playerId] || 0;
+  const oppScore = opp ? (gd.challengeScores?.[opp.id] || 0) : '?';
+  const chalType = week % 2 === 0 ? 'wheel' : 'timing';
+  const myDone = myScore > 0;
+  const oppDone = opp && (gd.challengeScores?.[opp.id] > 0);
+
+  c.innerHTML = `
+    <div class="card" style="background:radial-gradient(ellipse at 50% 0%,rgba(255,180,0,.06),transparent 60%)">
+      <div class="card-title" style="color:#ffd700">🏆 PROVA DO LÍDER — SEMANA ${week}</div>
+      <div class="card-sub">O líder vence a prova e fica imune! Indica 2 para a berlinda.</div>
+
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <div style="flex:1;padding:10px;border-radius:10px;background:rgba(255,180,0,.06);border:1px solid rgba(255,180,0,.15);text-align:center">
+          <div style="font-size:11px;color:rgba(255,255,255,.4);letter-spacing:1px;margin-bottom:4px">VOCÊ</div>
+          <div style="font-size:28px">${CHARS[me?.char]?.emoji || '👤'}</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#ffd700">${myScore > 0 ? myScore + 'pts' : '—'}</div>
+          <div style="font-size:9px;color:${myDone?'#33dd77':'rgba(255,255,255,.3)'};">${myDone?'✅ FEITO':'aguardando'}</div>
+        </div>
+        <div style="display:flex;align-items:center;font-family:'Bebas Neue',sans-serif;font-size:22px;color:rgba(255,255,255,.2)">VS</div>
+        <div style="flex:1;padding:10px;border-radius:10px;background:rgba(51,153,255,.05);border:1px solid rgba(51,153,255,.12);text-align:center">
+          <div style="font-size:11px;color:rgba(255,255,255,.4);letter-spacing:1px;margin-bottom:4px">${opp?.name || 'RIVAL'}</div>
+          <div style="font-size:28px">${opp ? CHARS[opp.char]?.emoji : '👤'}</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#3399ff">${oppDone ? oppScore + 'pts' : '—'}</div>
+          <div style="font-size:9px;color:${oppDone?'#33dd77':'rgba(255,255,255,.3)'};">${oppDone?'✅ FEITO':'jogando...'}</div>
+        </div>
+      </div>
+
+      ${myDone ? `
+        <div class="dlg"><div class="dlg-speaker">📺 PRODUÇÃO</div><div class="dlg-text">Você já completou a prova! Aguardando ${opp?.name || 'rival'}...</div></div>
+        <div class="waiting-dots"><div class="wd"></div><div class="wd"></div><div class="wd"></div></div>
+      ` : `
+        <div class="challenge-box">
+          <div class="ch-title">${chalType === 'wheel' ? '🎡 ROLETA DO DESTINO' : '⏱️ PROVA DO BOTÃO'}</div>
+          <div class="ch-desc">${chalType === 'wheel' ? 'Gire a roleta para decidir sua pontuação!' : 'Aperte no momento certo para marcar pontos!'}</div>
+          <div id="chal-inner"></div>
+        </div>
+      `}`;
+
+  if (!myDone) {
+    if (chalType === 'timing') renderTimingGame();
+    else renderWheelGame();
+  }
+
+  // If both done, resolve (host decides)
+  if (myDone && oppDone && LOCAL.isHost) {
+    setTimeout(() => resolveChallenge(room, gd), 1500);
+  }
+}
+
+function renderTimingGame() {
+  const inner = document.getElementById('chal-inner');
+  if (!inner) return;
+  inner.innerHTML = `
+    <div class="timing-wrap" id="tbar" onclick="timingPress()">
+      <div class="t-zone" style="left:30%;width:40%"></div>
+      <div class="t-zone gold" style="left:43%;width:14%"></div>
+      <div class="t-cursor" id="tcur" style="left:0%"></div>
+    </div>
+    <div class="t-msg" id="tmsg">Toque para marcar pontos!</div>
+    <div style="text-align:center;font-size:12px;color:rgba(255,255,255,.4);margin-bottom:8px" id="tattempts">${timingAttempts} tentativas</div>
+    <button class="act gold" onclick="timingPress()">⚡ APERTAR!</button>`;
+  timingPos = 0; timingDir = 1; timingScore = 0; timingAttempts = 3;
+  clearInterval(timingInterval);
+  timingInterval = setInterval(() => {
+    timingPos += timingDir * 1.8;
+    if (timingPos >= 99 || timingPos <= 0) timingDir *= -1;
+    const cur = document.getElementById('tcur');
+    if (cur) cur.style.left = timingPos + '%';
+  }, 16);
+}
+
+function timingPress() {
+  if (timingAttempts <= 0) return;
+  const inGold = timingPos >= 43 && timingPos <= 57;
+  const inGreen = timingPos >= 30 && timingPos <= 70;
+  const msg = document.getElementById('tmsg');
+  const att = document.getElementById('tattempts');
+  if (inGold) { timingScore += 30; if(msg){msg.textContent='🌟 PERFEITO! +30';msg.style.color='#ffd700';} }
+  else if (inGreen) { timingScore += 15; if(msg){msg.textContent='✅ BOM! +15';msg.style.color='#33dd77';} }
+  else { if(msg){msg.textContent='❌ Errou!';msg.style.color='#ff3355';} }
+  timingAttempts--;
+  if (att) att.textContent = `${timingAttempts} tentativa${timingAttempts !== 1 ? 's' : ''}`;
+  if (timingAttempts <= 0) {
+    clearInterval(timingInterval);
+    setTimeout(() => submitChallengeScore(Math.max(1, timingScore)), 800);
+  }
+}
+
+const WHEEL_SEGS = [
+  {label:'LÍDER!',color:'#ffd700',val:100},{label:'+30pts',color:'#33dd77',val:30},
+  {label:'+20pts',color:'#3399ff',val:20},{label:'+5pts',color:'#888',val:5},
+  {label:'+50pts',color:'#aa44ff',val:50},{label:'IMUNE!',color:'#ff8800',val:80},
+  {label:'+15pts',color:'#ff44aa',val:15},{label:'+40pts',color:'#ff5533',val:40},
+];
+
+function renderWheelGame() {
+  const inner = document.getElementById('chal-inner');
+  if (!inner) return;
+  wheelSpun = false;
+  const size = Math.min(180, window.innerWidth * 0.45);
+  const segs = WHEEL_SEGS.map((s, i) => {
+    const a = (360 / WHEEL_SEGS.length);
+    const sa = (a * i - 90) * (Math.PI / 180);
+    const ea = (a * (i + 1) - 90) * (Math.PI / 180);
+    const x1 = 50 + 48 * Math.cos(sa), y1 = 50 + 48 * Math.sin(sa);
+    const x2 = 50 + 48 * Math.cos(ea), y2 = 50 + 48 * Math.sin(ea);
+    const ma = ((a * i + a / 2) - 90) * (Math.PI / 180);
+    const tx = 50 + 32 * Math.cos(ma), ty = 50 + 32 * Math.sin(ma);
+    return `<path d="M50,50 L${x1},${y1} A48,48 0 0,1 ${x2},${y2} Z" fill="${s.color}" stroke="rgba(0,0,0,.3)" stroke-width=".5"/>
+      <text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="4" font-weight="bold" font-family="Bebas Neue,sans-serif">${s.label}</text>`;
+  }).join('');
+  inner.innerHTML = `
+    <div class="wheel-container">
+      <div class="wheel-svg-wrap">
+        <div class="wheel-ptr">⬇️</div>
+        <svg id="wsvg" width="${size}" height="${size}" viewBox="0 0 100 100" style="border-radius:50%;box-shadow:0 0 20px rgba(0,0,0,.5)">
+          ${segs}
+          <circle cx="50" cy="50" r="5" fill="#1a1a2e" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="wheel-result" id="wresult"></div>
+      <button class="wheel-spin-btn" id="wspin" onclick="doSpin()">🎡 GIRAR!</button>
+    </div>`;
+}
+
+function doSpin() {
+  if (wheelSpun) return;
+  wheelSpun = true;
+  const btn = document.getElementById('wspin');
+  if (btn) btn.disabled = true;
+  const svg = document.getElementById('wsvg');
+  const total = 1440 + Math.random() * 720;
+  let cur = 0, speed = 7, elapsed = 0;
+  const tick = setInterval(() => {
+    cur += speed; elapsed++;
+    if (elapsed > 60) speed = Math.max(0.4, speed * 0.97);
+    if (svg) svg.style.transform = `rotate(${cur}deg)`;
+    if (speed < 0.45) {
+      clearInterval(tick);
+      const finalAngle = cur % 360;
+      const segSize = 360 / WHEEL_SEGS.length;
+      const idx = Math.floor(((360 - finalAngle + segSize / 2) % 360) / segSize);
+      const seg = WHEEL_SEGS[idx % WHEEL_SEGS.length];
+      const res = document.getElementById('wresult');
+      if (res) { res.textContent = `🎯 ${seg.label}`; res.style.color = seg.color; }
+      setTimeout(() => submitChallengeScore(seg.val), 1000);
+    }
+  }, 16);
+}
+
+function submitChallengeScore(score) {
+  db.ref(`rooms/${LOCAL.roomCode}/gameData/challengeScores/${LOCAL.playerId}`).set(score);
+  setMyAction(`Prova: ${score}pts`);
+  toast(`Sua pontuação: ${score}pts!`, '#ffd700');
+}
+
+function resolveChallenge(room, gd) {
+  const players = Object.values(room.players || {});
+  const scores = gd.challengeScores || {};
+  // Include NPCs with random scores
+  const allScores = [
+    ...players.map(p => ({ id: p.id, name: p.name, score: scores[p.id] || 0 })),
+    ...Object.values(room.npcs || {}).map(n => ({ id: n.id, name: n.name, score: Math.floor(Math.random() * 80) + 10 })),
+  ].sort((a, b) => b.score - a.score);
+  const leader = allScores[0];
+
+  db.ref(`rooms/${LOCAL.roomCode}/gameData`).update({
+    leader: leader.id,
+    leaderName: leader.name,
+    phase: 'nominate',
+    challengeScores: {},
+    turn: LOCAL.isHost ? LOCAL.playerId : Object.keys(room.players || {})[0],
+  });
+  toast(`👑 ${leader.name} é o LÍDER da semana!`, '#ffd700');
+}
+
+// ══════════════════════════════
+//  NOMINATION PHASE
+// ══════════════════════════════
+function renderNominate(room, me, opp, isMyTurn, gd) {
+  const c = document.getElementById('content');
+  const leaderId = gd.leader;
+  const leaderName = gd.leaderName || leaderId;
+  const imLeader = leaderId === LOCAL.playerId;
+  const nominated = gd.nominated || [];
+  const myDone = (gd.nominateVotes || {})[LOCAL.playerId];
+
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title">👑 ${leaderName} É O LÍDER!</div>
+      <div class="card-sub">O LÍDER INDICA 2 PARA A BERLINDA</div>
+      <div class="dlg">
+        <div class="dlg-speaker">👑 <span style="color:#ffd700">${leaderName.toUpperCase()}</span></div>
+        <div class="dlg-text">Finalmente! É minha hora de liderar essa casa. Vou pensar bem antes de indicar...</div>
+      </div>
+      ${nominated.length >= 2 ? `
+        <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:10px;font-weight:700">❌ NA BERLINDA:</div>
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          ${nominated.map(name => {
+            const ch = CHARS[name] || {};
+            return `<div style="padding:10px;border-radius:10px;background:rgba(255,50,50,.08);border:1px solid rgba(255,50,50,.2);text-align:center;flex:1">
+              <div style="font-size:24px">${ch.emoji || '👤'}</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:#ff5555">${name}</div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="actions"><button class="act gold" onclick="proceedToVote()">🗳️ IR PARA VOTAÇÃO →</button></div>
+      ` : imLeader ? `
+        <div style="font-size:13px;color:rgba(255,255,255,.6);font-weight:700;margin-bottom:8px">Escolha 2 para a berlinda:</div>
+        <div class="vote-grid" id="nom-grid"></div>
+        <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:6px;text-align:center" id="nom-count">0/2 selecionados</div>
+        <div class="actions" style="margin-top:10px">
+          <button class="act red" id="btn-nom" onclick="confirmNomination()" disabled>❌ CONFIRMAR BERLINDA</button>
+        </div>
+      ` : `
+        <div class="dlg"><div class="dlg-speaker">📺 PRODUÇÃO</div><div class="dlg-text">${leaderName} está escolhendo quem vai para a berlinda...</div></div>
+        <div class="waiting-dots"><div class="wd"></div><div class="wd"></div><div class="wd"></div></div>
+      `}
+    </div>`;
+
+  if (imLeader && nominated.length < 2) buildNomGrid(room, gd);
+}
+
+let selectedNoms = [];
+function buildNomGrid(room, gd) {
+  selectedNoms = [];
+  const grid = document.getElementById('nom-grid');
+  if (!grid) return;
+  const players = Object.values(room.players || {});
+  const npcs = Object.values(room.npcs || {});
+  const leaderId = gd.leader;
+  const all = [...players.filter(p => p.id !== leaderId), ...npcs];
+
+  grid.innerHTML = all.map(p => {
+    const ch = CHARS[p.char || p.name] || {};
+    return `<div class="vote-card" id="nom-${p.id || p.name}" onclick="toggleNom('${p.id || p.name}','${p.name}')">
+      <div class="vc-emoji">${ch.emoji || '👤'}</div>
+      <div class="vc-name" style="color:${ch.color || '#fff'}">${p.name}</div>
+      <div class="vc-pop">⭐${p.pop || 50}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleNom(id, name) {
+  const key = id + '|' + name;
+  if (selectedNoms.find(n => n.id === id)) {
+    selectedNoms = selectedNoms.filter(n => n.id !== id);
+    document.getElementById(`nom-${id}`)?.classList.remove('voted');
+  } else if (selectedNoms.length < 2) {
+    selectedNoms.push({ id, name });
+    document.getElementById(`nom-${id}`)?.classList.add('voted');
+  }
+  const cnt = document.getElementById('nom-count');
+  if (cnt) cnt.textContent = `${selectedNoms.length}/2 selecionados`;
+  const btn = document.getElementById('btn-nom');
+  if (btn) btn.disabled = selectedNoms.length !== 2;
+}
+
+function confirmNomination() {
+  if (selectedNoms.length !== 2) return;
+  const names = selectedNoms.map(n => n.name);
+  db.ref(`rooms/${LOCAL.roomCode}/gameData`).update({ nominated: names });
+  toast(`❌ Berlinda: ${names.join(' e ')}!`, '#ff3355');
+}
+
+function proceedToVote() {
+  if (!LOCAL.isHost) return;
+  db.ref(`rooms/${LOCAL.roomCode}/gameData/phase`).set('vote');
+}
+
+// ══════════════════════════════
+//  VOTE PHASE
+// ══════════════════════════════
+let myVote = '';
+function renderVote(room, me, opp, isMyTurn, gd) {
+  const c = document.getElementById('content');
+  const nominated = gd.nominated || [];
+  const myVoteDone = (gd.voteResults || {})[LOCAL.playerId];
+  const oppVoteDone = opp && (gd.voteResults || {})[opp.id];
+
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title" style="color:#ff3355">🗳️ HORA DO PAREDÃO!</div>
+      <div class="card-sub">VOTE EM QUEM DEVE SAIR DA CASA</div>
+      ${myVoteDone ? `
+        <div class="dlg"><div class="dlg-speaker">✅ SEU VOTO</div><div class="dlg-text">Você votou em <strong style="color:#ff3355">${myVoteDone}</strong>. Aguardando ${opp?.name || 'rival'}...</div></div>
+        ${oppVoteDone ? '<div class="actions"><button class="act gold" onclick="resolveVote()">📢 VER RESULTADO →</button></div>' : '<div class="waiting-dots"><div class="wd"></div><div class="wd"></div><div class="wd"></div></div>'}
+      ` : `
+        <div class="dlg confessional" style="background:rgba(255,50,50,.05);border-color:rgba(255,50,50,.15)">
+          <div class="dlg-speaker" style="color:#ff3355">${CHARS[me?.char]?.emoji || '👤'} CONFESSIONÁRIO</div>
+          <div class="dlg-text">${CHARS[me?.char]?.lines?.conf?.[0] || 'É hora de decidir...'}</div>
+        </div>
+        <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:10px">Vote em quem deve sair:</div>
+        <div class="vote-grid">
+          ${nominated.map(name => {
+            const ch = CHARS[name] || {};
+            return `<div class="vote-card" onclick="castVote('${name}')">
+              <div class="vc-emoji">${ch.emoji || '👤'}</div>
+              <div class="vc-name" style="color:${ch.color || '#fff'}">${name}</div>
+              <div class="vc-pop">${ch.role || 'Participante'}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      `}
+    </div>`;
+
+  // Auto-resolve if both voted
+  if (myVoteDone && oppVoteDone && LOCAL.isHost) {
+    setTimeout(() => resolveVote(), 1500);
+  }
+}
+
+function castVote(name) {
+  myVote = name;
+  db.ref(`rooms/${LOCAL.roomCode}/gameData/voteResults/${LOCAL.playerId}`).set(name);
+  setMyAction(`Votou em ${name}`);
+  toast(`🗳️ Voto em ${name} registrado!`, CHARS[name]?.color || '#ff3355');
+}
+
+function resolveVote() {
+  if (!LOCAL.isHost) return;
+  const gd_snap = {};
+  db.ref(`rooms/${LOCAL.roomCode}/gameData`).once('value').then(snap => {
+    const gd = snap.val() || {};
+    const results = gd.voteResults || {};
+    const nominated = gd.nominated || [];
+    // Count votes
+    const counts = {};
+    nominated.forEach(n => counts[n] = 0);
+    // Player votes
+    Object.values(results).forEach(v => { if (counts[v] !== undefined) counts[v]++; });
+    // NPC votes (random from nominated)
+    const npcs = Object.values({}); // simplified
+    const npcVotes = Math.floor(Math.random() * 4) + 2;
+    counts[nominated[Math.floor(Math.random() * nominated.length)]] += npcVotes;
+
+    const eliminated = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
+    db.ref(`rooms/${LOCAL.roomCode}/gameData`).update({
+      phase: 'result',
+      eliminated,
+      voteResults: counts,
+    });
+  });
+}
+
+// ══════════════════════════════
+//  RESULT PHASE
+// ══════════════════════════════
+function renderResult(room, me, opp, gd, week) {
+  const c = document.getElementById('content');
+  const elim = gd.eliminated || '';
+  const counts = gd.voteResults || {};
+  const isPlayerElim = elim && (me?.char === elim || me?.name === elim);
+  const ch = CHARS[elim] || {};
+  const players = Object.values(room.players || {});
+  const isLastWeek = week >= 7 || players.filter(p => p.id).length <= 2;
+
+  c.innerHTML = `
+    <div class="card" style="border-color:rgba(255,50,50,.2);background:radial-gradient(ellipse at 50% 0%,rgba(255,50,50,.07),transparent 60%)">
+      <div class="card-title" style="color:#ff3355">📢 RESULTADO DO PAREDÃO</div>
+      <div style="text-align:center;padding:16px 0">
+        <div style="font-size:clamp(48px,12vw,72px)">${ch.emoji || '👤'}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(10px,2.5vw,13px);letter-spacing:5px;color:rgba(255,50,50,.6);margin:6px 0">ELIMINADO(A)</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(26px,7vw,44px);letter-spacing:3px;color:${ch.color || '#fff'};margin-bottom:12px">${elim.toUpperCase()}</div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:14px">
+          ${Object.entries(counts).map(([name, v]) =>
+            `<div style="padding:8px 14px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);text-align:center">
+              <div style="font-size:11px;color:rgba(255,255,255,.4)">${name}</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${name===elim?'#ff3355':'rgba(255,255,255,.4)'}">${v}</div>
+            </div>`
+          ).join('')}
+        </div>
+        <div class="dlg">
+          <div class="dlg-speaker">${ch.emoji || '👤'} ${elim.toUpperCase()}</div>
+          <div class="dlg-text">${ch.lines?.lose || 'Que experiência foi essa...'}</div>
+        </div>
+      </div>
+      ${isPlayerElim ? `
+        <div style="text-align:center;padding:10px;background:rgba(255,50,50,.08);border-radius:10px;border:1px solid rgba(255,50,50,.2)">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#ff3355">VOCÊ FOI ELIMINADO(A)!</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:4px">Mas pode assistir o resto do jogo!</div>
+        </div>
+      ` : ''}
+      ${LOCAL.isHost ? `
+        <div class="actions" style="margin-top:12px">
+          <button class="act gold" onclick="nextWeek(${week})">
+            ${isLastWeek ? '🏆 GRANDE FINAL!' : `▶ SEMANA ${week + 1} →`}
+          </button>
+        </div>
+      ` : `
+        <div class="waiting-dots"><div class="wd"></div><div class="wd"></div><div class="wd"></div></div>
+        <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.3)">Aguardando host iniciar próxima semana...</div>
+      `}
+    </div>`;
+}
+
+function nextWeek(currentWeek) {
+  if (!LOCAL.isHost) return;
+  const nextW = currentWeek + 1;
+  if (nextW > 7) {
+    db.ref(`rooms/${LOCAL.roomCode}/gameData/phase`).set('final');
+    db.ref(`rooms/${LOCAL.roomCode}/status`).set('finished');
+  } else {
+    db.ref(`rooms/${LOCAL.roomCode}/gameData`).update({
+      phase: 'challenge',
+      week: nextW,
+      leader: '',
+      leaderName: '',
+      nominated: [],
+      voteResults: {},
+      challengeScores: {},
+      eliminated: '',
+    });
+    db.ref(`rooms/${LOCAL.roomCode}`).update({ week: nextW });
+  }
+}
+
+// ══════════════════════════════
+//  FINAL PHASE
+// ══════════════════════════════
+function renderFinalPhase(room, me, opp, gd) {
+  const c = document.getElementById('content');
+  const players = Object.values(room.players || {});
+  c.innerHTML = `
+    <div class="card" style="background:radial-gradient(ellipse at 50% 0%,rgba(255,180,0,.1),transparent 60%)">
+      <div class="card-title" style="color:#ffd700">🏆 GRANDE FINAL!</div>
+      <div class="card-sub">OS FINALISTAS SE ENFRENTAM!</div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px">
+        ${players.map(p => {
+          const ch = CHARS[p.char] || {};
+          return `<div style="text-align:center;flex:1;padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
+            <div style="font-size:36px">${ch.emoji || '👤'}</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:${ch.color || '#fff'};margin:6px 0">${p.name}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4)">⭐${p.pop} · ${p.wins}🏆</div>
+          </div>`;
+        }).join('')}
+      </div>
+      ${LOCAL.isHost ? `<div class="actions"><button class="act gold" onclick="runFinalVote()">🏆 VOTAR NO CAMPEÃO!</button></div>` : `<div class="waiting-dots"><div class="wd"></div><div class="wd"></div><div class="wd"></div></div>`}
+    </div>`;
+}
+
+function runFinalVote() {
+  // Simulate audience vote + scores
+  db.ref(`rooms/${LOCAL.roomCode}`).once('value').then(snap => {
+    const room = snap.val();
+    const players = Object.values(room.players || {});
+    const winner = players.sort((a, b) => (b.pop + b.wins * 15) - (a.pop + a.wins * 15))[0];
+    db.ref(`rooms/${LOCAL.roomCode}`).update({
+      status: 'finished',
+      winner: winner.id,
+      winnerName: winner.name,
+      winnerChar: winner.char,
+    });
+  });
+}
+
+function showFinalScreen(room) {
+  showScreen('s-final');
+  const winnerId = room.winner;
+  const winnerName = room.winnerName;
+  const winnerChar = room.winnerChar;
+  const ch = CHARS[winnerChar] || {};
+  const isMe = winnerId === LOCAL.playerId;
+  const players = Object.values(room.players || {});
+
+  if (isMe) spawnConfetti();
+
+  document.getElementById('final-wrap').innerHTML = `
+    <span class="final-trophy">${isMe ? '🏆' : '🥈'}</span>
+    <div class="final-title">${isMe ? 'VOCÊ VENCEU!' : winnerName + ' VENCEU!'}</div>
+    <div style="font-size:40px;margin:8px 0">${ch.emoji || '👤'}</div>
+    <div style="font-family:'Permanent Marker',cursive;font-size:clamp(13px,3vw,17px);color:rgba(255,255,255,.75);margin-bottom:16px;line-height:1.7">
+      "${isMe ? ch.lines?.win : ch.lines?.win || 'Que jogo incrível!'}"
+    </div>
+    <div class="final-stats">
+      ${players.map(p => `
+        <div class="fs">
+          <div class="fs-v" style="color:${CHARS[p.char]?.color||'#fff'}">${CHARS[p.char]?.emoji||'👤'}</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px">${p.name}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.4)">⭐${p.pop} · ${p.wins}🏆</div>
+        </div>`).join('')}
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+      <button onclick="location.reload()" class="btn gold" style="width:auto;padding:12px 28px">🔄 NOVA PARTIDA</button>
+    </div>`;
+}
+
+// ══════════════════════════════
+//  RANKING TAB
+// ══════════════════════════════
+function renderRanking(room, me, opp) {
+  const c = document.getElementById('content');
+  const players = Object.values(room.players || {}).sort((a, b) => b.pop - a.pop);
+  const npcs = Object.values(room.npcs || {}).slice(0, 4).sort((a, b) => b.pop - a.pop);
+  const all = [...players, ...npcs];
+
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title">📊 RANKING AO VIVO</div>
+      <div class="rank-list">
+        ${all.map((p, i) => {
+          const isMe = p.id === LOCAL.playerId;
+          const isOpp = opp && p.id === opp.id;
+          const ch = CHARS[p.char || p.name] || {};
+          return `<div class="rank-row ${isMe?'me':isOpp?'opp':''}">
+            <div class="rr-pos">${['🥇','🥈','🥉'][i] || i + 1}</div>
+            <div class="rr-emoji">${ch.emoji || '🤖'}</div>
+            <div class="rr-info">
+              <div class="rr-name" style="color:${ch.color||'#fff'}">${p.name}${isMe?' (você)':''}</div>
+              <div class="rr-sub">${ch.role || 'NPC'} · ${p.wins || 0}🏆 vitórias</div>
+              <div class="rr-bar"><div class="rr-bar-fill" style="width:${p.pop||50}%;background:${ch.color||'#888'}"></div></div>
+            </div>
+            <div class="rr-pop" style="color:${ch.color||'#fff'}">${p.pop || 50}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════
+//  CHAT TAB
+// ══════════════════════════════
+function renderChat(room) {
+  const c = document.getElementById('content');
+  const msgs = Object.values(room.chatMessages || {}).sort((a,b) => a.ts - b.ts).slice(-30);
+  c.innerHTML = `
+    <div class="card" style="min-height:200px">
+      <div class="card-title">💬 CHAT DA CASA</div>
+      <div id="chat-msgs" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;max-height:240px;overflow-y:auto">
+        ${msgs.map(m => `
+          <div style="padding:8px 12px;border-radius:8px;background:${m.pid===LOCAL.playerId?'rgba(255,180,0,.08)':'rgba(255,255,255,.04)'};border:1px solid rgba(255,255,255,.06)">
+            <div style="font-size:10px;color:${m.color||'rgba(255,255,255,.4)'};font-weight:800;margin-bottom:3px">${m.emoji||'👤'} ${m.name}</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.82)">${m.text}</div>
+          </div>`).join('')}
+        ${msgs.length === 0 ? '<div style="text-align:center;color:rgba(255,255,255,.3);font-size:13px;padding:20px">Nenhuma mensagem ainda...</div>' : ''}
+      </div>
+      <div style="display:flex;gap:8px">
+        <input id="chat-inp" style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;font-family:'Nunito',sans-serif;font-size:14px;outline:none" placeholder="Mensagem..." maxlength="100" onkeydown="if(event.key==='Enter')sendChat()">
+        <button onclick="sendChat()" class="act gold" style="white-space:nowrap;padding:10px 14px">📤</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        ${['😂','🔥','👑','💀','🤝','🎉','😤','🌻'].map(e => `<button onclick="quickChat('${e}')" style="padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);cursor:pointer;font-size:18px;-webkit-tap-highlight-color:transparent">${e}</button>`).join('')}
+      </div>
+    </div>`;
+  // Scroll to bottom
+  setTimeout(() => { const m = document.getElementById('chat-msgs'); if(m) m.scrollTop = m.scrollHeight; }, 100);
+}
+
+function sendChat() {
+  const inp = document.getElementById('chat-inp');
+  const text = inp?.value?.trim();
+  if (!text) return;
+  const ch = CHARS[LOCAL.myChar] || {};
+  db.ref(`rooms/${LOCAL.roomCode}/chatMessages`).push({
+    pid: LOCAL.playerId, name: LOCAL.myName, text,
+    emoji: ch.emoji, color: ch.color, ts: Date.now(),
+  });
+  if (inp) inp.value = '';
+}
+
+function quickChat(emoji) {
+  const ch = CHARS[LOCAL.myChar] || {};
+  db.ref(`rooms/${LOCAL.roomCode}/chatMessages`).push({
+    pid: LOCAL.playerId, name: LOCAL.myName, text: emoji,
+    emoji: ch.emoji, color: ch.color, ts: Date.now(),
+  });
+}
+
+// ══════════════════════════════
+//  CONFESSIONAL TAB
+// ══════════════════════════════
+function renderConfessional() {
+  const c = document.getElementById('content');
+  const ch = CHARS[LOCAL.myChar] || {};
+  const confessions = [
+    { text: '"Meu plano está funcionando PERFEITAMENTE."', effect: '+10 pop', fn: () => updateMyPop(10) },
+    { text: '"Estou fingindo que sou aliado(a) deles."', effect: 'Rival -8 pop', fn: () => updateOppPop(-8) },
+    { text: '"Esse jogo tá me transformando."', effect: '+15 pop (viral!)', fn: () => updateMyPop(15) },
+    { text: '"Não tenho plano nenhum e tô adorando."', effect: 'Sorte aleatória', fn: () => updateMyPop(Math.random() > 0.5 ? 20 : -5) },
+  ];
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title">🎥 CONFESSIONÁRIO</div>
+      <div class="dlg" style="background:rgba(255,50,50,.05);border-color:rgba(255,50,50,.15)">
+        <div class="dlg-speaker" style="color:#ff5555">${ch.emoji} ${LOCAL.myName.toUpperCase()}</div>
+        <div class="dlg-text">"${ch.lines?.conf?.[Math.floor(Math.random()*2)] || 'Tô aqui no confessionário!'}"</div>
+      </div>
+      <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:10px;text-align:center">Declarações afetam sua popularidade!</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${confessions.map((conf, i) => `
+          <div onclick="useConfession(${i})" style="padding:12px 14px;border-radius:10px;cursor:pointer;background:rgba(255,50,50,.04);border:1px solid rgba(255,50,50,.12);transition:all .2s">
+            <div style="font-family:'Permanent Marker',cursive;font-size:13px;color:rgba(255,255,255,.85);margin-bottom:5px">${conf.text}</div>
+            <div style="font-size:10px;color:#33dd77;font-weight:800">${conf.effect}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+const confessionFns = [
+  () => updateMyPop(10),
+  () => updateOppPop(-8),
+  () => updateMyPop(15),
+  () => updateMyPop(Math.random() > 0.5 ? 20 : -5),
+];
+
+function useConfession(idx) {
+  confessionFns[idx]?.();
+  toast('🎥 Declaração feita!', '#ff44aa');
+}
+
+function updateMyPop(delta) {
+  db.ref(`rooms/${LOCAL.roomCode}/players/${LOCAL.playerId}/pop`).transaction(p => Math.max(0, Math.min(100, (p || 50) + delta)));
+}
+
+function updateOppPop(delta) {
+  db.ref(`rooms/${LOCAL.roomCode}/players`).once('value').then(snap => {
+    const players = snap.val() || {};
+    const oppId = Object.keys(players).find(id => id !== LOCAL.playerId);
+    if (oppId) db.ref(`rooms/${LOCAL.roomCode}/players/${oppId}/pop`).transaction(p => Math.max(0, Math.min(100, (p || 50) + delta)));
+  });
+}
+
+// ══════════════════════════════
+//  TABS
+// ══════════════════════════════
+function switchTab(tab) {
+  LOCAL.activeTab = tab;
+  ['game','ranking','chat','confess'].forEach(t => {
+    const b = document.getElementById(`tab-${t}`);
+    if (b) { b.className = 'bbb' + (t === tab ? ' hl' : ''); }
+  });
+
+  if (tab === 'ranking') {
+    db.ref(`rooms/${LOCAL.roomCode}`).once('value').then(snap => {
+      const room = snap.val();
+      const players = Object.values(room?.players || {});
+      const me = players.find(p => p.id === LOCAL.playerId);
+      const opp = players.find(p => p.id !== LOCAL.playerId);
+      renderRanking(room, me, opp);
+    });
+  } else if (tab === 'chat') {
+    db.ref(`rooms/${LOCAL.roomCode}`).once('value').then(snap => renderChat(snap.val()));
+    // Live chat listener
+    db.ref(`rooms/${LOCAL.roomCode}/chatMessages`).on('value', snap => {
+      if (LOCAL.activeTab === 'chat') renderChat({ chatMessages: snap.val() });
+    });
+  } else if (tab === 'confess') {
+    renderConfessional();
+  } else {
+    LOCAL.activeTab = 'game';
+  }
+}
+
+// ══════════════════════════════
+//  HELPERS
+// ══════════════════════════════
+function setMyAction(text) {
+  db.ref(`rooms/${LOCAL.roomCode}/players/${LOCAL.playerId}/action`).set(text);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function toast(msg, color = '#ffd700') {
+  const wrap = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.style.borderLeftColor = color;
+  el.innerHTML = `<span style="color:${color}">${msg}</span>`;
+  wrap.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+function spawnConfetti() {
+  const con = document.getElementById('confetti');
+  const colors = ['#ffd700','#ff3355','#33dd77','#3399ff','#aa44ff','#ff8800','#ff44aa'];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div');
+    el.className = 'cp';
+    el.style.cssText = `left:${Math.random()*100}%;background:${colors[i%colors.length]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*2}s;border-radius:${Math.random()>.5?'50%':'2px'}`;
+    con.appendChild(el);
+  }
+}
+
+// ══════════════════════════════
+//  INIT
+// ══════════════════════════════
+renderLobby();
+</script>
+</body>
+</html>
